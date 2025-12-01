@@ -116,25 +116,25 @@ class TicketDetailSerializer(serializers.ModelSerializer):
         fields = ("id", "row", "seat", "movie_session")
 
 
+class TicketCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ("row", "seat", "movie_session")
+
+
 class OrderSerializer(serializers.ModelSerializer):
     tickets = TicketDetailSerializer(many=True, read_only=True)
+    ticket_set = TicketCreateSerializer(many=True, write_only=True)
 
     class Meta:
         model = Order
-        fields = ("id", "tickets", "created_at")
+        fields = ("id", "tickets", "ticket_set", "created_at")
 
     def create(self, validated_data):
-        request = self.context.get("request")
-        tickets_data = request.data.get("tickets", [])
-
-        order = Order.objects.create(user=request.user)
+        tickets_data = validated_data.pop("ticket_set")
+        order = Order.objects.create(user=self.context["request"].user)
 
         for ticket_data in tickets_data:
-            Ticket.objects.create(
-                order=order,
-                row=ticket_data["row"],
-                seat=ticket_data["seat"],
-                movie_session_id=ticket_data["movie_session"],
-            )
+            Ticket.objects.create(order=order, **ticket_data)
 
         return order
