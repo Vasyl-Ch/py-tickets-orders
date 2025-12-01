@@ -122,19 +122,27 @@ class TicketCreateSerializer(serializers.ModelSerializer):
         fields = ("row", "seat", "movie_session")
 
 
-class OrderSerializer(serializers.ModelSerializer):
-    tickets = TicketDetailSerializer(many=True, read_only=True)
-    ticket_set = TicketCreateSerializer(many=True, write_only=True)
+class OrderCreateSerializer(serializers.ModelSerializer):
+    tickets = TicketCreateSerializer(many=True)
 
     class Meta:
         model = Order
-        fields = ("id", "tickets", "ticket_set", "created_at")
+        fields = ("id", "tickets", "created_at")
+        read_only_fields = ("created_at",)
 
     def create(self, validated_data):
-        tickets_data = validated_data.pop("ticket_set")
+        tickets_data = validated_data.pop("tickets")
         order = Order.objects.create(user=self.context["request"].user)
 
         for ticket_data in tickets_data:
             Ticket.objects.create(order=order, **ticket_data)
 
         return order
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    tickets = TicketDetailSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ("id", "tickets", "created_at")
