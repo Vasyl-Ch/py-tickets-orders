@@ -1,4 +1,7 @@
-from rest_framework import viewsets, permissions
+from rest_framework import (
+    viewsets,
+    permissions
+)
 from datetime import datetime
 
 from cinema.models import (
@@ -100,10 +103,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
 
         if date:
             filter_date = datetime.strptime(date, "%Y-%m-%d").date()
-            next_day = filter_date.replace(day=filter_date.day + 1)
-            queryset = queryset.filter(
-                show_time__gte=filter_date, show_time__lt=next_day
-            )
+            queryset = queryset.filter(show_time__date=filter_date)
 
         if movie_id:
             movie_id = int(movie_id)
